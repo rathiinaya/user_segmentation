@@ -74,6 +74,49 @@ headings_df = pd.DataFrame(headings)
 # Replace 'content_tag' with the appropriate HTML tag for your content
 content = soup.find('div')  # Update 'div' with the appropriate tag
 content_text = content.get_text(strip=True) if content else "No content found"
+#for using llm generated iab segments mapped to the data
+from openai import OpenAI
+
+client = OpenAI(api_key="YOUR_API_KEY")
+
+iab_categories = [
+    "Banking & Finance",
+    "Digital Subscriptions",
+    "E-commerce",
+    "Education & Career Development",
+    "Interest-Based Targeting",
+    "Legal & Regulatory",
+    "Pharmacy/Drugstore",
+    "Professional Development & Training",
+    "Remarketing",
+    "Test Preparation & Exam Readiness"
+]
+
+prompt = f"""
+You are an IAB classifier.
+
+Choose one or more categories from this list:
+
+{', '.join(iab_categories)}
+
+Webpage Content:
+{content_text[:5000]}
+
+Return ONLY the category names as a comma-separated list.
+"""
+
+response = client.chat.completions.create(
+    model="gpt-4.1-mini",
+    messages=[
+        {"role": "system", "content": "You classify webpages into IAB audience categories."},
+        {"role": "user", "content": prompt}
+    ]
+)
+
+predicted_segments = response.choices[0].message.content.strip()
+
+print("Predicted IAB Segments:")
+print(predicted_segments)
 
 # Find and extract footer details from the page
 # For this example, let's assume the footer is contained within a footer tag
